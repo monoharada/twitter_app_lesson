@@ -3,7 +3,10 @@ import { RootState } from '../app/store';
 
 
 
-
+interface USER {
+  displayName: string,
+  photoUrl: string
+}
 
 export const userSlice = createSlice({
   name: 'user',
@@ -18,13 +21,17 @@ export const userSlice = createSlice({
     logout: (state) => {
       state.user = { uid: "", photoUrl: "", displayName: "" }
     },
+    updateUserProfile: (state, action: PayloadAction<USER>) => {
+      state.user.displayName = action.payload.displayName
+      state.user.photoUrl = action.payload.photoUrl
+    }
 
   },
 
 
 });
 
-export const { login, logout } = userSlice.actions;
+export const { login, logout, updateUserProfile } = userSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
