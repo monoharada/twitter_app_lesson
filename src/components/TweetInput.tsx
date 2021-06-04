@@ -12,69 +12,109 @@ const TweetInput = () => {
   const [tweetImage, setTweetImage] = useState<File | null>(null)
   const [tweetMsg, setTweetMsg] = useState("")
 
+
+
   const onChangeImageHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files![0]) {
       setTweetImage(e.target.files![0]);
       e.target.value = "";
-      if (tweetImage) {
-        const S =
-          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        const N = 16;
-        const randomChar = Array.from(crypto.getRandomValues(new Uint32Array(N)))
-          .map((n) => S[n % S.length])
-          .join("");
-        const fileName = randomChar + "_" + tweetImage.name;
-        const uploadTweetImg = storage.ref(`images/${fileName}`).put(tweetImage)
-        uploadTweetImg.on(
-          firebase.storage.TaskEvent.STATE_CHANGED,
-          () => { },
-          (err) => { alert(err.message) },
-          async () => {
-            await storage.ref('images')
-              .child(fileName)
-              .getDownloadURL()
-              .then(async (url) => {
-                await db.collection("posts").add(
-                  {
-                    avatar: user.photoUrl,
-                    image: url,
-                    text: tweetMsg,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    username: user.displayName
-                  }
-                )
-              })
-          }
-        )
-
-      } else {
-        db.collection('posts').add({
-          avatar: user.photoUrl,
-          image: "",
-          text: tweetMsg,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          username: user.displayName
-        })
-      }
-      setTweetImage(null)
-      setTweetMsg("")
     }
-  };
+  }
+
+
 
   const sendTweet = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault()
+    if (tweetImage) {
+      const S =
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      const N = 16;
+      const randomChar = Array.from(crypto.getRandomValues(new Uint32Array(N)))
+        .map((n) => S[n % S.length])
+        .join("");
+      const fileName = randomChar + "_" + tweetImage.name;
+      const uploadTweetImg = storage.ref(`images/${fileName}`).put(tweetImage)
+      uploadTweetImg.on(
+        firebase.storage.TaskEvent.STATE_CHANGED,
+        () => { },
+        (err) => { alert(err.message) },
+        async () => {
+          await storage.ref('images')
+            .child(fileName)
+            .getDownloadURL()
+            .then(async (url) => {
+              await db.collection("posts").add(
+                {
+                  avatar: user.photoUrl,
+                  image: url,
+                  text: tweetMsg,
+                  timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                  username: user.displayName
+                }
+              )
+            })
+        }
+      )
+
+    } else {
+      db.collection('posts').add({
+        avatar: user.photoUrl,
+        image: "",
+        text: tweetMsg,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        username: user.displayName
+      })
+    }
+    setTweetImage(null)
+    setTweetMsg("")
   }
 
+
   return (
-    <div>
-      <Avatar
-        className={styles.tweet_avator}
-        src={user.photoUrl}
-        onClick={async () => {
-          await auth.signOut()
-        }}
-      />
-    </div>
+    <>
+      <form onSubmit={sendTweet}>
+        <div className={styles.tweet_form}>
+          <Avatar
+            className={styles.tweet_avator}
+            src={user.photoUrl}
+            onClick={async () => {
+              await auth.signOut()
+            }}
+          />
+          <input
+            className={styles.tweet_input}
+            placeholder="Whats happnning"
+            type="text"
+            autoFocus
+            value={tweetMsg}
+            onChange={(e) => { setTweetMsg(e.target.value) }}
+          />
+          <IconButton>
+            <label >
+              <AddPhotoIcon
+                className={
+                  tweetImage ? styles.tweet_addIconLoaded : styles.tweet_addIcon
+                }
+              />
+              <input
+                type="file"
+                className={styles.tweet_hiddenIcon}
+                onChange={onChangeImageHandler}
+              />
+            </label>
+          </IconButton>
+        </div>
+        <Button
+          type='submit'
+          disabled={!tweetMsg}
+          className={
+            tweetMsg ? styles.tweet_sendBtn : styles.tweet_sendDisableBtn
+          }
+        >
+          Tweet
+          </Button>
+      </form>
+    </>
   )
 }
 
